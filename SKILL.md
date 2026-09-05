@@ -28,6 +28,7 @@ license: MIT
 - Python 环境（已装 `requests` + `beautifulsoup4`，复用隔离 venv）：
   `C:/Users/Jiazi/.workbuddy/binaries/python/envs/default/Scripts/python.exe`
 - 飞书连接器已连接；`lark-cli` 在 WorkBuddy 连接器层可用。**在 Git Bash 沙箱里 `lark-cli` launcher 有 POSIX 路径 bug（`/c/`→`c:\c\`），必须用 node 直接调用其入口脚本**，详见 Step 3。
+- **非 WorkBuddy 平台（Claude Code / Codex）**：转换脚本三端通用（`pip install -r requirements.txt` 即可）；仅「创建飞书文档」这步需自装 `lark-cli`（`npm i -g @larksuite/cli`）并配置飞书应用凭证（app_id / app_secret）。SVG→PNG 的 `svg2png.js` 依赖 playwright（`npm i playwright`）。
 - **图片文件名必须 ASCII**（如 `img_001.png`），脚本已默认按 `img_{index:03d}.{ext}` 命名。中文图片路径在 Git Bash 环境下会导致 lark-cli 找不到文件、`@./images/` 上传静默失败——**绝对不要改成中文/含空格命名**。
 - 落点二选一：
   - 用户提供了目标文件夹/知识库的 `parent-token` → 用 `--parent-token <token>`

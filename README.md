@@ -20,7 +20,7 @@
 
 ## 🚀 快速开始 / Quick Start
 
-> 本技能依赖 WorkBuddy 的「飞书」连接器提供 `lark-cli`。下方为 WorkBuddy 内的标准调用链。
+> 转换脚本（`html_to_md.py` / `normalize_images.py` / `verify_doc.py`）纯 Python，三端通用；仅「创建飞书文档」这步依赖 `lark-cli`（WorkBuddy 内置，Claude Code / Codex 需自装）。下方为 WorkBuddy 内的标准调用链。
 
 ```bash
 PY="<你的 WorkBuddy 隔离 venv python>"
@@ -43,6 +43,16 @@ cd ./_build
 ```
 
 **零依赖本地预览**：只想看 Markdown 产物，不落飞书？只跑 Step 1-2 即可，`doc.md` 可直接在任何 Markdown 阅读器打开。
+
+## 🧩 跨平台安装 / Multi-Platform Setup
+
+| 平台 | 转换脚本（HTML → MD） | 落盘飞书（Step 3+） |
+|---|---|---|
+| **WorkBuddy** | 内置 venv，直接调用 | 飞书连接器已提供 `lark-cli` |
+| **Claude Code** | `pip install -r requirements.txt` | 自装 `lark-cli`（`npm i -g @larksuite/cli`）+ 飞书应用凭证 |
+| **Codex** | `pip install -r requirements.txt` | 自装 `lark-cli` + 飞书应用凭证 |
+
+> 装到各自 skills 目录即可被识别：WorkBuddy `~/.workbuddy/skills/`、Claude Code `~/.claude/skills/`、Codex `~/.codex/skills/`。只想转 Markdown 不落飞书，三端零额外依赖。
 
 ## 📖 典型工作流 / Workflow
 
@@ -110,4 +120,4 @@ Convert HTML pages/files into Feishu (Lark) cloud documents, preserving tables a
 
 Depends on the Feishu connector's `lark-cli`. See `SKILL.md` for the full 6-step pipeline.
 
-**Keywords**: html, feishu, lark, convert, markdown-to-doc, wechat, archive, knowledge-base, rag, skill, workbuddy
+**Keywords**: html, feishu, lark, convert, markdown-to-doc, wechat, archive, knowledge-base, rag, skill, agent-skills, workbuddy, claude-code, codex
