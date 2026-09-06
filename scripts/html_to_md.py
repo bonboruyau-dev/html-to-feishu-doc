@@ -163,6 +163,8 @@ def html_to_markdown(soup, img_dir=None, article_id=None):
                 elif t == 'img':
                     parts.append(img_ref(child.get('data-src') or child.get('src', ''),
                                         child.get('alt', '')))
+                elif t == 'br':
+                    parts.append('<br>')
                 else:
                     r = process_inline(child)
                     if r:
@@ -181,7 +183,12 @@ def html_to_markdown(soup, img_dir=None, article_id=None):
             return ''
 
         def cell_text(cell):
-            txt = escape_md(process_inline(cell).strip())
+            # 单元格内多个块级元素（<p>/<li>/<section>/<div>）之间用 <br> 换行，避免挤成一行
+            blocks = cell.find_all(['p', 'li', 'section', 'div'])
+            for i, el in enumerate(blocks):
+                if i > 0:
+                    el.insert_before(cell.new_tag('br'))
+            txt = process_inline(cell).strip()
             txt = txt.replace('|', '\\|')   # 单元格内竖线转义，避免 GFM 错位
             return txt if txt else ' '
 
