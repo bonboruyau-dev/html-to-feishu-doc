@@ -92,10 +92,11 @@ def promote_fake_headings(content_root):
     本函数把符合特征的短文本块提升为 <h2>，使最终层级为：
       # 文章标题（脚本首行生成） / ## 大标题 / ### 1.1 / #### 2.3.1
     """
-    # 中文数字序号（一、二、…）/ 结语 / 附 / 总结 / 阿拉伯数字序号（01、02、…）
+    # 中文数字序号（一、二、…）/ 结语 / 附 / 总结 / 阿拉伯数字序号（01引言、1.背景——
+    # 仅限「直接连接」或「英文点」两种伪装大标题形态；顿号/空格分隔（1、xxx）是正文编号，不提升）
     pattern = re.compile(
         r'^\s*(?:[一二三四五六七八九十]+、|结语|附\s*[:：]?|总结'
-        r'|\d{1,2}[、.．\s]*[\u4e00-\u9fffA-Za-z])\s*.{0,40}$'
+        r'|\d{1,2}[.．]?[\u4e00-\u9fffA-Za-z])\s*.{0,40}$'
     )
     promoted = []
     for el in list(content_root.find_all(['section', 'p', 'div'])):
@@ -248,25 +249,33 @@ def html_to_markdown(soup, img_dir=None, article_id=None):
 
     def process_list(el, ordered, depth=0):
         """
-        递归处理 ul/ol。两处关键容错：
+        递归处理 ul/ol。三处关键容错：
         1) 公众号常见 `<ol style="list-style:none"><ol>…</ol></ol>` 布局容器
            ——外层没有直接 li，必须下钻，否则整段列表被吞掉；
-        2) li 里嵌子列表 —— 缩进输出，而不是把子项文本拼进父项。
+        2) li 里嵌子列表 —— 缩进输出，而不是把子项文本拼进父项；
+        3) li 与子 ul/ol **混排**（ul 直接子 = [li, ul]）—— 按文档顺序同时
+           输出直接 li 与递归子列表，否则子列表被静默吞掉。
         """
         lines = []
-        items = el.find_all('li', recursive=False)
-        if not items:
+        indent = '  ' * depth
+        has_li = any(getattr(c, 'name', None) == 'li' for c in el.children)
+        if not has_li:
             for sub in el.find_all(['ul', 'ol'], recursive=False):
                 lines.extend(process_list(sub, sub.name == 'ol', depth))
             return lines
-        indent = '  ' * depth
-        for i, li in enumerate(items, 1):
-            txt = list_item_text(li)
-            prefix = f"{i}." if ordered else "-"
-            if txt:
-                lines.append(f"{indent}{prefix} {txt}\n")
-            for sub in direct_sublists(li):
-                lines.extend(process_list(sub, sub.name == 'ol', depth + 1))
+        idx = 0
+        for child in el.children:
+            name = getattr(child, 'name', None)
+            if name == 'li':
+                idx += 1
+                txt = list_item_text(child)
+                prefix = f"{idx}." if ordered else "-"
+                if txt:
+                    lines.append(f"{indent}{prefix} {txt}\n")
+                for sub in direct_sublists(child):
+                    lines.extend(process_list(sub, sub.name == 'ol', depth + 1))
+            elif name in ('ul', 'ol'):
+                lines.extend(process_list(child, name == 'ol', depth))
         return lines
 
     def traverse(element):
