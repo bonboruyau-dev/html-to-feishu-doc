@@ -190,7 +190,15 @@ cd "<_build目录绝对路径>"
 - **网络图片**：若 HTML 中图片是防盗链/过期链接，下载会失败并回退为原始 URL，飞书创建时可能因无法取图而留空。
 - **图片扩展名 ≠ 真实格式**：lark-cli 按内容校验并**整篇创建失败**（不是跳过）。必须先跑 Step 2.5 的 `normalize_images.py` + `svg2png.js`。这是公众号文章最高频的失败点。
 - **删除文档**：lark-cli 当前没有 delete document 命令。创建失败/重复的旧文档需用户手动在飞书里删除。**所以发现内容问题一律走 Step 6 定点修复，不要重建。**
-- **公众号的「列表套列表」布局容器**：编辑器会吐出 `<ol style="list-style:none"><ol>…</ol></ol>`，外层没有直接 `<li>`。朴素实现（只取 `find_all('li', recursive=False)`）会把这整段列表静默吞掉——`html_to_md.py` 已用递归 `process_list` 修好，含嵌套缩进。
+- **公众号的「列表套列表」布局容器**：编辑器会吐出 `<ol style="list-style:none"><ol>…</ol></ol>`，外层没有直接 `<li>`。朴素实现（只取 `find_all('li', recursive=False)`）会把这整段列表静默吞掉——`html_to_md.py` 已用递归 `process_list` 修好，含嵌套缩进与「li 与子 ul 同层混排」（ul 直接子 = `[li, ul]`）两种形态。
+- **批量图片上传限流（图片 >~20 张）**：一次 `docs +create` 本地上传超过约 20 张图时，第 3 张起稳定报 `correlation_failed / invalid_response`（压缩体积、等待重试均无效；前 2 张总成功）。**不要重试硬刚**，改用「占位符方案」：
+  1. 把 doc.md 里每个图片引用替换为唯一占位符文本（如 `IMG-PLACEHOLDER-003`）；
+  2. `docs +create` 创建（纯文本必成功）；
+  3. `docs +fetch --detail with-ids` 定位每个占位符的 block id；
+  4. 逐张 `docs +update --command block_insert_after --block-id <id> --content '<img path="@./images/img_NNN.jpg"/>'`，再 `block_delete` 占位符块（每张图一次独立上传，绕开限流）。
+  注意：`block_replace` **不允许** text→image 类型转换（报 no document changes）；str_replace 不支持资源替换。网络 URL 图片方案不可用——飞书服务端拉不动微信 CDN 防盗链（img 块为 0）。
+- **代码围栏错位吞内容**：原文（尤其 Prompt 模板）常残留孤立 ```` ``` ```` 或行内 ```` ```json{…} ````——按 CommonMark，带 info string 的 ```` ```json ```` **不能闭合**围栏，会把后续大段正文+表格吞进代码块。转换后必须校验：模拟配对（开启 = 任意 ```` ``` ```` 行，闭合 = 仅 ```` ``` ```` 的行），发现跨度异常大的代码块即围栏错位，回 doc.md 删除孤立残留行。
+- **微信长链风控**：带 `poc_token` 等参数的长链（`/s?__biz=…`）易被风控验证页拦截（标题 untitled、正文为空即中招），换 UA/Referer/真实浏览器均无效——**改用 `/s/xxxxxx` 短链**。
 - **大文档**：极长 HTML 生成的 Markdown 若超飞书单次限制，需分段创建后拼接（本技能 v1 不内置分页）。
 
 ## Resources
