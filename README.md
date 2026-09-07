@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **本项目已合并至 [wechat2knowledge](https://github.com/bonboruyau-dev/wechat2knowledge)**（公众号文章转知识库：Markdown + 飞书二合一）。本仓库已归档，仅作历史参考，请前往新仓库获取最新版本。
+
 # HTML → 飞书文档 · html-to-feishu-doc
 
 > 把任意 HTML 网页或 `.html` 文件，转换成一篇飞书云文档：表格保留、图片自动上传、大标题层级还原、含完整性回查与定点修复。可与「微信公众号转 Markdown」串联，形成「抓取 → 飞书存档」闭环。
